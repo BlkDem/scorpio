@@ -1,12 +1,12 @@
 {
-    "name": "scorpion",
-    "short_name": "scorpion",
+    "name": "Скорпион — пасьянс",
+    "short_name": "Скорпион",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Scorpion solitaire",
-    "orientation": "portrait-primary",
+    "background_color": "#0B100D",
+    "theme_color": "#0B100D",
+    "description": "Пасьянс «Скорпион»: подсказки и статистика",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
@@ -31,5 +31,6 @@
             "type": "image/png",
             "purpose": "maskable"
         }
-    ]
+    ],
+    "lang": "ru"
 }

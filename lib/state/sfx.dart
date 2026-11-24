@@ -14,16 +14,29 @@ class Sfx {
 
   Sfx(this.settings);
 
+  /// Звуки игры не должны глушить чужую музыку (Spotify и т. п.):
+  /// на Android — без запроса аудиофокуса, на iOS — категория ambient
+  /// (смешивается с другими и уважает беззвучный режим).
+  /// Контекст задаётся каждому плееру: плееры пула иначе берут стандартный,
+  /// который запрашивает фокус и ставит музыку на паузу.
+  static final AudioContext _context = AudioContext(
+    android: const AudioContextAndroid(
+      contentType: AndroidContentType.sonification,
+      usageType: AndroidUsageType.game,
+      audioFocus: AndroidAudioFocus.none,
+    ),
+    iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient),
+  );
+
   Future<void> init() async {
     try {
-      await AudioPlayer.global.setAudioContext(
-        AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build(),
-      );
+      await AudioPlayer.global.setAudioContext(_context);
     } catch (_) {}
     for (final s in Sound.values) {
       try {
         _pools[s] = await AudioPool.create(
-          source: AssetSource('sounds/${s.name}.wav'),
+          source: await _source(s),
+          audioContext: _context,
           maxPlayers: switch (s) {
             Sound.place || Sound.slide || Sound.flip => 4,
             _ => 2,
@@ -33,6 +46,16 @@ class Sfx {
         debugPrint('Sfx: не удалось загрузить ${s.name}: $e');
       }
     }
+  }
+
+  static Future<Source> _source(Sound s) async {
+    final path = 'sounds/${s.name}.wav';
+    if (!kIsWeb) return AssetSource(path);
+    // Веб-сервер может отдавать .wav как application/octet-stream (в mime.types
+    // nginx нет wav), а Firefox и Safari такой звук не играют. Передаём байты
+    // с явным типом.
+    final data = await rootBundle.load('assets/$path');
+    return BytesSource(data.buffer.asUint8List(), mimeType: 'audio/wav');
   }
 
   void play(Sound s, {double volume = 1}) {

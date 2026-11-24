@@ -42,5 +42,8 @@ String rankLabel(int rank) {
   }
 }
 
-/// Подпись карты для текста. U+FE0E — чтобы масть рисовалась символом, а не эмодзи.
-String cardLabel(int card) => '${rankLabel(rankOf(card))}${kSuitSymbols[suitOf(card)]}\u{FE0E}';
+const bool _kWeb = bool.fromEnvironment('dart.library.js_interop');
+
+/// Подпись карты для текста. U+FE0E — чтобы масть рисовалась символом, а не эмодзи
+/// (Android). На вебе CanvasKit не находит для него шрифт, там он не нужен.
+String cardLabel(int card) => '${rankLabel(rankOf(card))}${kSuitSymbols[suitOf(card)]}${_kWeb ? '' : '\u{FE0E}'}';

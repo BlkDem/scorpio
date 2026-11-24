@@ -59,6 +59,33 @@ class CourtArt {
         ..strokeWidth = stroke * 0.8,
     );
   }
+
+  /// Одна (верхняя) половина фигуры в рамке — для маленьких карт.
+  /// [frame] — область половины, пропорции около 1 : 1.23.
+  static void paintBust(Canvas canvas, Rect frame, int card) {
+    final suit = suitOf(card);
+    final rank = rankOf(card);
+    final stroke = math.max(0.35, frame.width * 0.014);
+    canvas.drawRect(
+      frame,
+      Paint()
+        ..shader = Gradient.linear(frame.topCenter, frame.bottomCenter, const [
+          Color(0xFFFFF7E4),
+          Color(0xFFFBEED2),
+        ]),
+    );
+    canvas.save();
+    canvas.clipRect(frame);
+    _Figure(canvas, frame, suit, rank, stroke).draw();
+    canvas.restore();
+    canvas.drawRect(
+      frame,
+      Paint()
+        ..color = isRedSuit(suit) ? const Color(0xFF9A1B2A) : const Color(0xFF1E3D8C)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke * 1.4,
+    );
+  }
 }
 
 class _Figure {

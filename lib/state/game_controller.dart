@@ -173,6 +173,7 @@ class GameController extends ChangeNotifier {
       preparing = true;
       notifyListeners();
       try {
+        await _letFramePaint();
         s = await findSolvableSeed(s);
       } finally {
         preparing = false;
@@ -355,6 +356,11 @@ class GameController extends ChangeNotifier {
     });
   }
 
+  /// На вебе `compute` выполняется в основном потоке: сначала даём кадру
+  /// с индикатором («Тасуем колоду…», спиннер подсказки) отрисоваться.
+  static Future<void> _letFramePaint() =>
+      kIsWeb ? Future<void>.delayed(const Duration(milliseconds: 40)) : Future<void>.value();
+
   // ---------------------------------------------------------------- Подсказки
 
   Future<HintResult?> hint() async {
@@ -370,7 +376,9 @@ class GameController extends ChangeNotifier {
     final v = version;
     SolveResult r;
     try {
-      r = await solveInBackground(state, nodeLimit: 120000);
+      await _letFramePaint();
+      // На вебе поиск идёт в основном потоке и медленнее — ограничиваем его сильнее.
+      r = await solveInBackground(state, nodeLimit: kIsWeb ? 40000 : 120000);
     } catch (_) {
       r = const SolveResult(null, false, 0);
     }

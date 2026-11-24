@@ -223,14 +223,22 @@ class GameState {
   }
 
   /// Быстрый хеш позиции для решателя (с учётом симметрии колонок).
+  ///
+  /// Две 26-битные «дорожки» по модулю простого числа, без переполнений:
+  /// результат одинаков в VM, wasm и JS (в JS целые — это double, а побитовые
+  /// операции обрезаются до 32 бит). Итог — 52 бита.
   int hashKey() {
+    const p = 67108859; // простое, 2^26 - 5
+    const lane = 67108864; // 2^26
     final hs = List<int>.filled(kColumns, 0);
     for (var c = 0; c < kColumns; c++) {
-      var h = 17 + faceDown[c] * 31;
+      var a = 17 + faceDown[c] * 31;
+      var b = 101 + faceDown[c] * 7;
       for (final x in columns[c]) {
-        h = ((h * 1000003) ^ (x + 1)) & 0xFFFFFFFFFFFFF;
+        a = (a * 1000003 + x + 1) % p;
+        b = (b * 999983 + x * 7 + 3) % p;
       }
-      hs[c] = h;
+      hs[c] = a * lane + b;
     }
     if (stock.isEmpty) {
       hs.sort();
@@ -239,11 +247,13 @@ class GameState {
       final tail = hs.sublist(3)..sort();
       hs.setRange(3, kColumns, tail);
     }
-    var r = stock.isEmpty ? 7 : 11;
+    var a = stock.isEmpty ? 7 : 11;
+    var b = stock.isEmpty ? 5 : 13;
     for (final h in hs) {
-      r = ((r * 31) ^ h) & 0xFFFFFFFFFFFFF;
+      a = (a * 1000003 + h ~/ lane) % p;
+      b = (b * 999983 + h % lane) % p;
     }
-    return r;
+    return a * lane + b;
   }
 
   /// Канонический ключ позиции для поиска.

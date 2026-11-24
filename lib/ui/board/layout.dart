@@ -39,10 +39,11 @@ class BoardLayout {
     final w = size.width - insets.horizontal;
     final h = size.height - insets.vertical;
     wide = w / h > 1.25;
-    const margin = 8.0;
+    // На узких экранах каждый пиксель ширины идёт в карту.
+    final margin = w < 520 ? 4.0 : 8.0;
     if (!wide) {
       // Портрет: резерв и «дом» сверху.
-      const gapK = 0.085;
+      final gapK = w < 520 ? 0.055 : 0.085;
       final byW = (w - margin * 2) / (7 + 6 * gapK);
       final byH = h / ((1 + 0.2 + 1 + 3.9) * CardPainterKit.aspect);
       cardW = math.min(math.min(byW, byH), 150);

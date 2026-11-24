@@ -43,18 +43,22 @@ class CardPainterKit {
 
     final rank = rankOf(card);
     final suit = suitOf(card);
-    if (rank >= 11) {
-      final frame = Rect.fromLTRB(s.width * 0.255, s.height * 0.07, s.width * 0.745, s.height * 0.93);
-      CourtArt.paint(c, frame, card);
+    if (s.width < compactBelow) {
+      _compactFace(c, s, card);
     } else {
-      _pips(c, s, suit, rank);
+      if (rank >= 11) {
+        final frame = Rect.fromLTRB(s.width * 0.255, s.height * 0.07, s.width * 0.745, s.height * 0.93);
+        CourtArt.paint(c, frame, card);
+      } else {
+        _pips(c, s, suit, rank);
+      }
+      _index(c, s, card);
+      c.save();
+      c.translate(s.width, s.height);
+      c.rotate(math.pi);
+      _index(c, s, card);
+      c.restore();
     }
-    _index(c, s, card);
-    c.save();
-    c.translate(s.width, s.height);
-    c.rotate(math.pi);
-    _index(c, s, card);
-    c.restore();
 
     _gloss(c, s);
     c.restore();
@@ -140,6 +144,48 @@ class CardPainterKit {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
+  }
+
+  /// Карты уже этой ширины (логические пиксели, телефоны) рисуются «крупным
+  /// шрифтом»: классический индекс и очки на них не читаются.
+  static const double compactBelow = 76;
+
+  /// Крупный индекс одной строкой (достоинство слева, масть справа) в верхней
+  /// трети карты — она видна даже в плотном веере; ниже — большая масть
+  /// или погрудный портрет фигуры.
+  static void _compactFace(Canvas c, Size s, int card) {
+    final rank = rankOf(card);
+    final suit = suitOf(card);
+    final color = Ink.suit(suit);
+    final paint = Paint()..color = color;
+    final w = s.width, h = s.height;
+
+    // Индекс должен целиком (с хвостом Q и J) уместиться в верхние ~25% —
+    // столько остаётся видно в самом плотном веере.
+    final fs = w * 0.40;
+    final tp = _rankText(rank, color, fs);
+    c.save();
+    c.translate(w * 0.07, -fs * 0.035);
+    if (rank == 10) c.scale(0.78, 1.0);
+    tp.paint(c, Offset.zero);
+    c.restore();
+
+    final pipW = w * 0.29;
+    final pip = Rect.fromLTWH(w * 0.93 - pipW, h * 0.04, pipW, pipW * (suit == kDiamonds ? 1.12 : 1.0));
+    c.drawPath(SuitPaths.fit(suit, pip), paint);
+
+    if (rank >= 11) {
+      final fw = w * 0.66;
+      CourtArt.paintBust(c, Rect.fromLTWH((w - fw) / 2, h * 0.36, fw, h * 0.58), card);
+    } else {
+      final big = w * (rank == 1 ? 0.62 : 0.5);
+      final r = Rect.fromCenter(
+        center: Offset(w / 2, h * 0.655),
+        width: big,
+        height: big * (suit == kDiamonds ? 1.15 : 1.0),
+      );
+      c.drawPath(SuitPaths.fit(suit, r), paint);
+    }
   }
 
   static void _index(Canvas c, Size s, int card) {
