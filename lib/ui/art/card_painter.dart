@@ -162,16 +162,16 @@ class CardPainterKit {
 
     // Индекс должен целиком (с хвостом Q и J) уместиться в верхние ~25% —
     // столько остаётся видно в самом плотном веере.
-    final fs = w * 0.40;
+    final fs = w * 0.35;
     final tp = _rankText(rank, color, fs);
     c.save();
-    c.translate(w * 0.07, -fs * 0.035);
-    if (rank == 10) c.scale(0.78, 1.0);
+    c.translate(w * 0.09, h * 0.02);
+    if (rank == 10) c.scale(0.8, 1.0);
     tp.paint(c, Offset.zero);
     c.restore();
 
-    final pipW = w * 0.29;
-    final pip = Rect.fromLTWH(w * 0.93 - pipW, h * 0.04, pipW, pipW * (suit == kDiamonds ? 1.12 : 1.0));
+    final pipW = w * 0.25;
+    final pip = Rect.fromLTWH(w * 0.91 - pipW, h * 0.045, pipW, pipW * (suit == kDiamonds ? 1.12 : 1.0));
     c.drawPath(SuitPaths.fit(suit, pip), paint);
 
     if (rank >= 11) {
